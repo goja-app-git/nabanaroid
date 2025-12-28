@@ -142,3 +142,4 @@ decideBtn.addEventListener("click", () => {
     setStatus(false, "モデルなし（docs/model/nabana.digits を確認）");
   }
 })();
+
