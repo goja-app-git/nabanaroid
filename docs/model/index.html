@@ -10,33 +10,29 @@
   <main class="wrap">
     <header class="head">
       <div class="title">暗号設定（星野用）</div>
-      <div class="subtitle">PINが合っている時だけ暗号貼り付け欄を表示</div>
+      <div class="subtitle">PIN解除後に暗号貼り付け欄を表示</div>
     </header>
 
-    <!-- ロック画面 -->
-    <section id="lockPanel" class="panel">
+    <section id="lockPanel" class="col">
       <div class="label">PIN（4桁）</div>
-      <input id="pin" class="box" inputmode="numeric" autocomplete="one-time-code"
-             placeholder="0514" style="min-height:auto;height:52px;resize:none;">
-      <div class="row">
+      <!-- ★0514という数字はUI上に一切出さない -->
+      <input id="pin" class="box" type="password" inputmode="numeric" pattern="[0-9]*"
+             autocomplete="off" placeholder="PIN" style="min-height:auto;height:52px;resize:none;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
         <button id="unlockBtn" class="btn btnBig">解除</button>
-        <a class="btn btnSub" href="../">本体へ戻る</a>
+        <a class="btn" href="../">本体へ戻る</a>
       </div>
       <div id="lockMsg" class="status">ロック中</div>
-      <div class="status" style="opacity:.75">
-        ※これは覗き見防止（クライアント側ロック）。強固な認証ではない。
-      </div>
     </section>
 
-    <!-- 解除後に表示 -->
-    <section id="secretPanel" class="panel" style="display:none;">
+    <section id="secretPanel" class="col" style="display:none;">
       <div class="label">暗号（貼り付け）</div>
       <textarea id="cipherText" class="box" placeholder="1.00....（数字とドットだけ）"></textarea>
 
-      <div class="row">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
         <button id="saveBtn" class="btn">保存</button>
-        <button id="clearBtn" class="btn btnSub2">削除</button>
-        <a class="btn btnSub" href="../">本体へ戻る</a>
+        <button id="clearBtn" class="btn">削除</button>
+        <a class="btn" href="../">本体へ戻る</a>
       </div>
 
       <div id="msg" class="status">未保存</div>
@@ -46,6 +42,7 @@
   <script type="module">
     import { setCipherDigits, clearCipherDigits, getCipherDigits } from "../js/storage.js";
 
+    // ★ここにPINがある（覗き見防止。強固な認証ではない）
     const PIN_CODE = "0514";
 
     const lockPanel = document.getElementById("lockPanel");
@@ -72,18 +69,14 @@
       const existing = getCipherDigits();
       if (existing) {
         cipherText.value = existing;
-        setMsg(msg, true, "保存済み（既存データあり）");
+        setMsg(msg, true, "保存済み（既存あり）");
       } else {
         setMsg(msg, false, "未保存");
       }
     }
 
-    // 解除状態をこのタブだけ保持（リロードで再ロック）
-    if (sessionStorage.getItem("nabanaroid_unlocked") === "1") {
-      unlock();
-    } else {
-      setMsg(lockMsg, false, "ロック中");
-    }
+    // 同タブ内だけ解除状態を保持（リロードで再ロック）
+    if (sessionStorage.getItem("nabanaroid_unlocked") === "1") unlock();
 
     unlockBtn.addEventListener("click", () => {
       const v = (pin.value || "").trim();
@@ -97,15 +90,15 @@
 
     saveBtn.addEventListener("click", () => {
       const v = cipherText.value.trim();
-      if (!v) { setMsg(msg, false, "空です"); return; }
+      if (!v) { setMsg(msg, false, "空"); return; }
       setCipherDigits(v);
-      setMsg(msg, true, "保存しました");
+      setMsg(msg, true, "保存した");
     });
 
     clearBtn.addEventListener("click", () => {
       clearCipherDigits();
       cipherText.value = "";
-      setMsg(msg, false, "削除しました");
+      setMsg(msg, false, "削除した");
     });
   </script>
 </body>
