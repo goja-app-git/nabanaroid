@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>菜花ロイド - 暗号設定</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <main class="wrap">
+    <header class="head">
+      <div class="title">暗号設定（星野用）</div>
+      <div class="subtitle">菜花から届いた「数字とドットだけの長い文字列」をここに貼る</div>
+    </header>
+
+    <section class="panel">
+      <div class="label">暗号（貼り付け）</div>
+      <textarea id="cipherText" class="box" placeholder="1.00....（数字とドットだけ）"></textarea>
+
+      <div class="row">
+        <button id="saveBtn" class="btn">保存</button>
+        <button id="clearBtn" class="btn btnSub2">削除</button>
+        <a class="btn btnSub" href="../">本体へ戻る</a>
+      </div>
+
+      <div id="msg" class="status">未保存</div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { setCipherDigits, clearCipherDigits, getCipherDigits } from "../js/storage.js";
+
+    const cipherText = document.getElementById("cipherText");
+    const msg = document.getElementById("msg");
+    const saveBtn = document.getElementById("saveBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    function setMsg(ok, text){
+      msg.textContent = text;
+      msg.classList.remove("ok","ng");
+      msg.classList.add(ok ? "ok" : "ng");
+    }
+
+    // 既存があれば表示
+    const existing = getCipherDigits();
+    if (existing) {
+      cipherText.value = existing;
+      setMsg(true, "保存済み（既存データあり）");
+    } else {
+      setMsg(false, "未保存");
+    }
+
+    saveBtn.addEventListener("click", () => {
+      const v = cipherText.value.trim();
+      if (!v) { setMsg(false, "空です"); return; }
+      setCipherDigits(v);
+      setMsg(true, "保存しました");
+    });
+
+    clearBtn.addEventListener("click", () => {
+      clearCipherDigits();
+      cipherText.value = "";
+      setMsg(false, "削除しました");
+    });
+  </script>
+</body>
+</html>
