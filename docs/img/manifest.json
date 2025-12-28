@@ -1,13 +1,15 @@
 {
   "idle": [
-    "./idle/whatever_idle.JPG"
+    "./idle/idle.png"
   ],
   "angry": [
-    "./angry/怒り.jpeg"
+    "./angry/angry.png"
   ],
   "nabana": [
-    "./nabana/a.png",
-    "./nabana/IMG_0123.JPG",
-    "./nabana/nabana-03.jpeg"
+    "./nabana/nabanaAI (1).png",
+    "./nabana/nabanaAI (2).png",
+    "./nabana/nabanaAI (3).png",
+    "./nabana/nabanaAI (4).png",
+    "./nabana/nabanaAI (5).png",
   ]
 }
