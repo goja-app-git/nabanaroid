@@ -32,81 +32,59 @@ body{
 .title{font-size:18px;font-weight:900}
 .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
 
-/* ===== 上半分（メイン） ===== */
-.stage{
-  display:grid;
-  grid-template-columns:180px 1fr;
-  gap:12px;
-  align-items:stretch;
-  padding:12px;
+/* ===== メイン出力（上半分） ===== */
+.stageMain{
   border:1px solid var(--bd);
   border-radius:18px;
   background:var(--panel);
+  padding:12px;
+  min-height:52vh;
+  display:flex;
 }
 
-.stageMain{
-  min-height:50vh; /* 上半分を主役に */
-}
-
-.avatar{
-  width:180px;height:180px;
-  border-radius:16px;
-  background:#050505;
-  border:1px solid var(--bd);
-  overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-}
-
-.avatarMain{
+.photoFrame{
+  position:relative;
   width:100%;
-  height:100%;
-  min-height:220px;
-}
-
-.avatar img{width:100%;height:100%;object-fit:cover}
-
-.bubbleWrap{position:relative; height:100%}
-.bubble{
-  height:100%;
-  padding:14px;
-  border-radius:18px;
-  border:2px solid #ffffff;
-  background:#000000;
-  color:var(--txt);
-  line-height:1.35;
+  border-radius:16px;
+  border:1px solid var(--bd);
+  background:#050505;
+  overflow:hidden;
   display:flex;
   align-items:center;
+  justify-content:center;
 }
+
+#avatarImg{
+  width:100%;
+  height:100%;
+  object-fit:contain;   /* ★自動で収まる（トリミングしない） */
+  display:block;
+}
+
+.bubbleOverlay{
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  pointer-events:none;
+}
+
 .bubbleMain{
-  font-size:26px; /* 結果を目立たせる */
-  padding:18px;
+  border:2px solid #ffffff;
+  background:#000000;
+  color:#ffffff;
+  border-radius:18px;
+  padding:14px 16px;
+  font-size:24px;
+  line-height:1.25;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
 
-.bubble::before{
-  content:"";
-  position:absolute;
-  left:-18px; top:36px;
-  width:0;height:0;
-  border-top:14px solid transparent;
-  border-bottom:14px solid transparent;
-  border-right:18px solid #ffffff;
-}
-.bubble::after{
-  content:"";
-  position:absolute;
-  left:-15px; top:36px;
-  width:0;height:0;
-  border-top:12px solid transparent;
-  border-bottom:12px solid transparent;
-  border-right:15px solid #000000;
-}
-
-/* ===== 入力：横並び固定（小画面は横スクロールで維持） ===== */
-.inputsRow{
-  display:flex;
+/* ===== 入力（横並び・スクロール禁止） ===== */
+.inputsGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;  /* 常に横並び */
   gap:12px;
-  overflow-x:auto;
-  padding-bottom:4px;
 }
 
 .col{
@@ -114,15 +92,14 @@ body{
   border-radius:18px;
   background:var(--panel);
   padding:12px;
-  flex:1;
-  min-width:320px; /* ここが“横並び固定”のコア（狭い端末はスクロール） */
+  min-width:0; /* ★これが無いとGridで横はみ出しやすい */
 }
 
 .label{font-size:14px;font-weight:900;margin-bottom:8px}
 
 .box{
   width:100%;
-  min-height:140px;
+  min-height:120px;
   border-radius:14px;
   border:1px solid #ffffff;
   background:#000000;
@@ -137,7 +114,6 @@ body{
 .actionsBottom{
   display:flex;
   justify-content:center;
-  padding-top:2px;
 }
 .btn{
   border:1px solid #ffffff;
@@ -148,10 +124,6 @@ body{
   font-weight:900;
   cursor:pointer;
   font-size:16px;
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
 }
 .btnBig{
   font-size:18px;
@@ -207,3 +179,11 @@ body{
   animation:spin 0.9s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ★小さい画面でも横並び維持しつつ収める */
+@media (max-width:430px){
+  .wrap{padding:12px}
+  .bubbleMain{font-size:20px}
+  .box{font-size:14px;min-height:100px;padding:10px}
+  .col{padding:10px}
+}
