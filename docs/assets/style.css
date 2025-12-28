@@ -57,7 +57,7 @@ body{
 #avatarImg{
   width:100%;
   height:100%;
-  object-fit:contain;   /* ★自動で収まる（トリミングしない） */
+  object-fit:contain; /* 自動で収まる（トリミングしない） */
   display:block;
 }
 
@@ -83,7 +83,7 @@ body{
 /* ===== 入力（横並び・スクロール禁止） ===== */
 .inputsGrid{
   display:grid;
-  grid-template-columns:1fr 1fr;  /* 常に横並び */
+  grid-template-columns:1fr 1fr; /* 常に横並び */
   gap:12px;
 }
 
@@ -92,7 +92,7 @@ body{
   border-radius:18px;
   background:var(--panel);
   padding:12px;
-  min-width:0; /* ★これが無いとGridで横はみ出しやすい */
+  min-width:0; /* Gridのはみ出し防止 */
 }
 
 .label{font-size:14px;font-weight:900;margin-bottom:8px}
@@ -154,11 +154,6 @@ body{
   justify-content:center;
   z-index:9999;
 }
-.splash.hidden{
-  opacity:0;
-  pointer-events:none;
-  transition:opacity 200ms ease;
-}
 .splashInner{
   display:flex;
   flex-direction:column;
@@ -180,7 +175,14 @@ body{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ★小さい画面でも横並び維持しつつ収める */
+/* ===== Splash hidden state ===== */
+.splash.hidden{
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+/* 小さい画面でも横並びは維持しつつ収める */
 @media (max-width:430px){
   .wrap{padding:12px}
   .bubbleMain{font-size:20px}
