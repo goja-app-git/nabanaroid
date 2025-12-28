@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>菜花ロイド</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="菜花ロイド">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="./icon/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+
+<body>
+  <!-- Splash (5秒固定) -->
+  <div id="splash" class="splash">
+    <div class="splashInner">
+      <div class="splashTitle">菜花ロイド 起動中...</div>
+      <div class="spinner" aria-label="loading"></div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <header class="head">
+      <div class="title">菜花ロイド</div>
+      <div class="subtitle">比較物を入力して「決断」</div>
+    </header>
+
+    <!-- 上：キャラ + 吹き出し -->
+    <section class="stage">
+      <div class="avatar">
+        <img id="avatarImg" alt="nabanaroid">
+      </div>
+      <div class="bubbleWrap">
+        <div id="bubble" class="bubble">ケツダンニコマリマシタラドウゾ</div>
+      </div>
+    </section>
+
+    <!-- 中：決断ボタン -->
+    <section class="actions">
+      <button id="decideBtn" class="btn">決断</button>
+    </section>
+
+    <!-- 下：入力 -->
+    <section class="inputs">
+      <div class="col">
+        <div class="label">比較物A（キーボード入力）</div>
+        <textarea id="inputA" class="box" placeholder="例：二郎 / 新幹線 / 温泉旅館 / 早起き"></textarea>
+      </div>
+      <div class="col">
+        <div class="label">比較物B（キーボード入力）</div>
+        <textarea id="inputB" class="box" placeholder="例：家系 / 飛行機 / ビジホ / 夜更かし"></textarea>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <a class="link" href="./model/">暗号貼り付け（星野用）</a>
+      <span id="modelStatus" class="status">未読込</span>
+    </footer>
+  </main>
+
+  <script type="module" src="./js/app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
+  </script>
+</body>
+</html>
