@@ -31,19 +31,18 @@
       <div class="subtitle">比較物を入力して「決断」</div>
     </header>
 
-    <!-- 上半分：決断表示エリア（メイン） -->
-    <section class="stage stageMain">
-      <div class="avatar avatarMain">
+    <!-- 上半分：メイン出力（写真の上に吹き出し） -->
+    <section class="stageMain">
+      <div class="photoFrame">
         <img id="avatarImg" alt="nabanaroid">
-      </div>
-
-      <div class="bubbleWrap bubbleWrapMain">
-        <div id="bubble" class="bubble bubbleMain">ケツダンニコマリマシタラドウゾ</div>
+        <div class="bubbleOverlay">
+          <div id="bubble" class="bubbleMain">ケツダンニコマリマシタラドウゾ</div>
+        </div>
       </div>
     </section>
 
-    <!-- 下半分：入力（横並び固定）＋決断ボタン -->
-    <section class="inputs inputsRow">
+    <!-- 下：入力（横並び・スクロール無しで収める） -->
+    <section class="inputsGrid">
       <div class="col">
         <div class="label">比較物A</div>
         <textarea id="inputA" class="box" placeholder="例：二郎 / 新幹線 / 温泉旅館 / 早起き"></textarea>
@@ -55,7 +54,7 @@
       </div>
     </section>
 
-    <section class="actions actionsBottom">
+    <section class="actionsBottom">
       <button id="decideBtn" class="btn btnBig">決断</button>
     </section>
 
