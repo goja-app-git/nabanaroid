@@ -1,10 +1,10 @@
 import { CFG } from "./config.js";
 import { digitsToB64u } from "./digits_codec.js";
 import { decryptFromB64u } from "./crypto.js";
-import { saveModelPayload, loadModelPayload, getCipherDigits } from "./storage.js";
+import { saveModelPayload, loadModelPayload } from "./storage.js";
 import { inferTags } from "./tagger.js";
 import { decideWithModel } from "./model.js";
-import { loadImageManifest, pickRandom } from "./images.js";
+import { loadImageManifest, shuffled } from "./images.js";
 
 const splash = document.getElementById("splash");
 const avatarImg = document.getElementById("avatarImg");
@@ -15,13 +15,9 @@ const inputA = document.getElementById("inputA");
 const inputB = document.getElementById("inputB");
 const decideBtn = document.getElementById("decideBtn");
 
-let IMAGES = { idle:[], angry:[], nabana:[] };
+let IMAGES = { idle: [], angry: [], nabana: [] };
 
-function setAvatar(src){
-  if (!src) { avatarImg.src = ""; return; }
-  avatarImg.src = src;
-}
-function say(text){ bubble.textContent = text; }
+function say(t){ bubble.textContent = t; }
 
 function setStatus(ok, msg){
   modelStatus.textContent = msg;
@@ -29,30 +25,40 @@ function setStatus(ok, msg){
   modelStatus.classList.add(ok ? "ok" : "ng");
 }
 
-function ensureImageFallback(){
+function setNoImage(){
+  avatarImg.onerror = null;
+  avatarImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+      <rect width="100%" height="100%" fill="#000"/>
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+            fill="#fff" font-size="26" font-family="sans-serif">NO IMAGE</text>
+    </svg>`
+  );
+}
+
+function setAvatarFromList(list){
+  const tries = shuffled(list);
+  if (!tries.length){ setNoImage(); return; }
+  let i = 0;
   avatarImg.onerror = () => {
-    avatarImg.onerror = null;
-    avatarImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-        <rect width="100%" height="100%" fill="#000"/>
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-              fill="#fff" font-size="26" font-family="sans-serif">NO IMAGE</text>
-      </svg>`
-    );
+    i += 1;
+    if (i < tries.length) avatarImg.src = tries[i];
+    else setNoImage();
   };
+  avatarImg.src = tries[i];
 }
 
 function showIdle(){
-  setAvatar(pickRandom(IMAGES.idle));
+  setAvatarFromList(IMAGES.idle);
   say(CFG.SAY_IDLE);
 }
 function showAngry(){
-  setAvatar(pickRandom(IMAGES.angry));
+  setAvatarFromList(IMAGES.angry);
   say(CFG.SAY_ANGRY);
 }
-function showWin(winText){
-  setAvatar(pickRandom(IMAGES.nabana));
-  say(CFG.sayWin(winText));
+function showWin(winner){
+  setAvatarFromList(IMAGES.nabana);
+  say(CFG.sayWin(winner));
 }
 
 function parseCipherDigits(s){
@@ -62,18 +68,26 @@ function parseCipherDigits(s){
   return { sd: parts[1], id: parts[2], cd: parts[3] };
 }
 
-async function loadModelFromStoredCipher(){
-  const digitsStr = getCipherDigits();
-  if (!digitsStr) throw new Error("no_cipher");
+/** ★GitHubに置いた暗号ファイルを読み込んで復号 */
+async function loadModelFromRepo(){
+  const url = CFG.MODEL_FETCH_NOCACHE
+    ? `${CFG.MODEL_DIGITS_URL}?v=${Date.now()}`
+    : CFG.MODEL_DIGITS_URL;
 
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("digits_fetch_failed");
+
+  const digitsStr = (await res.text()).trim();
   const { sd, id, cd } = parseCipherDigits(digitsStr);
+
   const encObj = {
     saltB64u: digitsToB64u(sd),
     ivB64u: digitsToB64u(id),
     cipherB64u: digitsToB64u(cd)
   };
+
   const payload = await decryptFromB64u(encObj, CFG.PASSPHRASE, CFG.PBKDF2_ITER);
-  saveModelPayload(payload);
+  saveModelPayload(payload); // 端末内にモデル（復号後）を保存して推論に使う
   return payload;
 }
 
@@ -87,59 +101,44 @@ function incomparable(a, b){
   return false;
 }
 
-// splash 5秒固定
-function startSplash5s(){
-  setTimeout(() => splash.classList.add("hidden"), CFG.SPLASH_MS);
-}
-
 decideBtn.addEventListener("click", () => {
   const aText = inputA.value.trim();
   const bText = inputB.value.trim();
-  if (!aText || !bText){
-    showAngry();
-    return;
-  }
+  if (!aText || !bText){ showAngry(); return; }
 
   const payload = loadModelPayload();
-  if (!payload){
-    // 暗号が未設定 or 未復号
-    showAngry();
-    return;
-  }
+  if (!payload){ showAngry(); return; }
 
   const a = inferTags(aText, CFG.TAGS_PER_ITEM);
   const b = inferTags(bText, CFG.TAGS_PER_ITEM);
 
-  if (incomparable(a, b)){
-    showAngry();
-    return;
-  }
+  if (incomparable(a, b)){ showAngry(); return; }
 
   const res = decideWithModel(payload, a.tags, b.tags);
-  const win = res.pickA ? aText : bText;
-  showWin(win);
+  const winner = res.pickA ? aText : bText;
+  showWin(winner);
 });
 
-// boot
-(async function boot(){
-  ensureImageFallback();
-  startSplash5s();
+(function bootSplash(){
+  setTimeout(() => splash.classList.add("hidden"), CFG.SPLASH_MS);
+})();
 
-  // 画像マニフェスト読み込み（名前/拡張子自由運用）
+(async function boot(){
+  // 画像manifest
   try{
     IMAGES = await loadImageManifest(CFG.IMAGE_MANIFEST_URL);
   }catch{
     IMAGES = { idle:[], angry:[], nabana:[] };
   }
 
-  // 初期表示
+  // 待機表示
   showIdle();
 
-  // 暗号が保存されていれば自動復号してモデルをローカルに保存
+  // ★モデルをGitHubから読む
   try{
-    await loadModelFromStoredCipher();
-    setStatus(true, "モデルあり");
+    await loadModelFromRepo();
+    setStatus(true, "モデル: GitHub");
   }catch{
-    setStatus(false, "未読込（modelページで暗号保存）");
+    setStatus(false, "モデルなし（docs/model/nabana.digits を確認）");
   }
 })();
