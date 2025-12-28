@@ -41,7 +41,7 @@
       </div>
     </section>
 
-    <!-- 下：入力（横並び・スクロール無しで収める） -->
+    <!-- 下：入力（横並びで画面内に収める） -->
     <section class="inputsGrid">
       <div class="col">
         <div class="label">比較物A</div>
@@ -63,6 +63,35 @@
       <span id="modelStatus" class="status">未読込</span>
     </footer>
   </main>
+
+  <!-- ===== Splash fail-safe (必ず5秒で消す) ===== -->
+  <script>
+    (function () {
+      function hideSplash() {
+        var el = document.getElementById("splash");
+        if (!el) return;
+        el.classList.add("hidden");
+        // CSSが効かない・上書きされてる時の最終保険
+        setTimeout(function () { el.style.display = "none"; }, 300);
+      }
+
+      function startTimer() {
+        setTimeout(hideSplash, 5000);
+      }
+
+      // DOMが準備できてから開始（iOS Safari対策）
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startTimer, { once: true });
+      } else {
+        startTimer();
+      }
+
+      // さらに保険：ページ表示復帰時にも消す（BFCache対策）
+      window.addEventListener("pageshow", function () {
+        hideSplash();
+      });
+    })();
+  </script>
 
   <script type="module" src="./js/app.js"></script>
   <script>
