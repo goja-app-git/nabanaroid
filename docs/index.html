@@ -31,31 +31,32 @@
       <div class="subtitle">比較物を入力して「決断」</div>
     </header>
 
-    <!-- 上：キャラ + 吹き出し -->
-    <section class="stage">
-      <div class="avatar">
+    <!-- 上半分：決断表示エリア（メイン） -->
+    <section class="stage stageMain">
+      <div class="avatar avatarMain">
         <img id="avatarImg" alt="nabanaroid">
       </div>
-      <div class="bubbleWrap">
-        <div id="bubble" class="bubble">ケツダンニコマリマシタラドウゾ</div>
+
+      <div class="bubbleWrap bubbleWrapMain">
+        <div id="bubble" class="bubble bubbleMain">ケツダンニコマリマシタラドウゾ</div>
       </div>
     </section>
 
-    <!-- 中：決断ボタン -->
-    <section class="actions">
-      <button id="decideBtn" class="btn">決断</button>
-    </section>
-
-    <!-- 下：入力 -->
-    <section class="inputs">
+    <!-- 下半分：入力（横並び固定）＋決断ボタン -->
+    <section class="inputs inputsRow">
       <div class="col">
-        <div class="label">比較物A（キーボード入力）</div>
+        <div class="label">比較物A</div>
         <textarea id="inputA" class="box" placeholder="例：二郎 / 新幹線 / 温泉旅館 / 早起き"></textarea>
       </div>
+
       <div class="col">
-        <div class="label">比較物B（キーボード入力）</div>
+        <div class="label">比較物B</div>
         <textarea id="inputB" class="box" placeholder="例：家系 / 飛行機 / ビジホ / 夜更かし"></textarea>
       </div>
+    </section>
+
+    <section class="actions actionsBottom">
+      <button id="decideBtn" class="btn btnBig">決断</button>
     </section>
 
     <footer class="foot">
