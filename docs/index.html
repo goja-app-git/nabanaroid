@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>菜花ロイド</title>
 
-  <!-- PWA -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,18 +30,18 @@
       <div class="subtitle">比較物を入力して「決断」</div>
     </header>
 
-    <!-- 上半分：メイン出力（写真の上に吹き出し） -->
+    <!-- 上半分：メイン（写真＋写真上の吹き出し） -->
     <section class="stageMain">
       <div class="photoFrame">
-        <img id="avatarImg" alt="nabanaroid">
+        <img id="avatarImg" alt="nabanaroid" />
         <div class="bubbleOverlay">
           <div id="bubble" class="bubbleMain">ケツダンニコマリマシタラドウゾ</div>
         </div>
       </div>
     </section>
 
-    <!-- 下：入力（横2列・画面内に収める） -->
-    <section class="inputsGrid">
+    <!-- 下：比較物A/B（横並び固定・はみ出し禁止） -->
+    <section class="inputsRow" aria-label="compare-inputs">
       <div class="col">
         <div class="label">比較物A</div>
         <textarea id="inputA" class="box" placeholder="例：二郎 / 新幹線 / 温泉旅館 / 早起き"></textarea>
