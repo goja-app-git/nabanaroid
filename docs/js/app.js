@@ -1,5 +1,5 @@
 import { CFG } from "./config.js";
-import { loadImageManifest, shuffled, safeUrl } from "./images.js";
+import { loadImageManifest, shuffled } from "./images.js";
 import { inferTags } from "./tagger.js";
 import { decideWithModel } from "./model.js";
 import { getCipherDigits, setCipherDigits, loadModelPayload, saveModelPayload } from "./storage.js";
@@ -17,13 +17,53 @@ const decideBtn = document.getElementById("decideBtn");
 
 let IMAGES = { idle:[], angry:[], nabana:[] };
 
-function vurl(u){ return `${u}?v=${encodeURIComponent(CFG.BUILD)}`; }
 function say(text){ bubble.textContent = text; }
 
 function setStatus(ok, msg){
   modelStatus.textContent = msg;
   modelStatus.classList.remove("ok","ng");
   modelStatus.classList.add(ok ? "ok" : "ng");
+}
+
+function absUrl(pathLike){
+  return new URL(pathLike, location.href).toString();
+}
+
+function withBuild(urlStr){
+  const u = new URL(urlStr);
+  u.searchParams.set("v", CFG.BUILD);
+  return u.toString();
+}
+
+async function hardResetIfRequested(){
+  const sp = new URLSearchParams(location.search);
+  if (!sp.has("reset")) return;
+
+  // SW解除
+  try{
+    if ("serviceWorker" in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  }catch{}
+
+  // Cache全消し
+  try{
+    if ("caches" in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  }catch{}
+
+  // localStorage消し（モデル/暗号も含めて一旦クリア）
+  try{
+    localStorage.clear();
+  }catch{}
+
+  // reset=1 を外して再読み込み
+  sp.delete("reset");
+  const newUrl = location.pathname + (sp.toString() ? `?${sp.toString()}` : "") + location.hash;
+  location.replace(newUrl);
 }
 
 function setNoImage(){
@@ -45,17 +85,27 @@ function setAvatarFromList(list){
   avatarImg.onerror = () => {
     i += 1;
     if (i < tries.length) {
-      avatarImg.src = safeUrl(vurl(tries[i]));
+      avatarImg.src = withBuild(absUrl(tries[i]));
     } else {
       setNoImage();
     }
   };
-  avatarImg.src = safeUrl(vurl(tries[i]));
+
+  avatarImg.src = withBuild(absUrl(tries[i]));
 }
 
-function showIdle(){ setAvatarFromList(IMAGES.idle); say(CFG.SAY_IDLE); }
-function showAngry(){ setAvatarFromList(IMAGES.angry); say(CFG.SAY_ANGRY); }
-function showWin(winText){ setAvatarFromList(IMAGES.nabana); say(CFG.sayWin(winText)); }
+function showIdle(){
+  setAvatarFromList(IMAGES.idle);
+  say(CFG.SAY_IDLE);
+}
+function showAngry(){
+  setAvatarFromList(IMAGES.angry);
+  say(CFG.SAY_ANGRY);
+}
+function showWin(winText){
+  setAvatarFromList(IMAGES.nabana);
+  say(CFG.sayWin(winText));
+}
 
 function parseCipherDigits(s){
   const parts = (s || "").trim().split(".");
@@ -65,16 +115,18 @@ function parseCipherDigits(s){
 }
 
 async function fetchRemoteCipher(){
-  const res = await fetch(vurl(CFG.REMOTE_CIPHER_URL), { cache: "no-store" });
-  if (!res.ok) throw new Error("remote_cipher_fetch_failed");
+  const url = withBuild(absUrl(CFG.REMOTE_CIPHER_URL));
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`cipher_fetch_${res.status}`);
   const text = (await res.text()).trim();
-  if (!text) throw new Error("remote_cipher_empty");
+  if (!text) throw new Error("cipher_empty");
   return text;
 }
 
 async function ensureCipherInLocal(){
   let digitsStr = getCipherDigits();
   if (digitsStr) return digitsStr;
+
   digitsStr = await fetchRemoteCipher();
   setCipherDigits(digitsStr);
   return digitsStr;
@@ -95,6 +147,7 @@ async function loadModelFromCipherDigits(){
 
 function incomparable(a, b){
   if (a.conf < CFG.MIN_ITEM_CONF && b.conf < CFG.MIN_ITEM_CONF) return true;
+
   if (CFG.DOMAIN_STRICT){
     if (a.domain !== "other" && b.domain !== "other" && a.domain !== b.domain){
       if (a.conf >= CFG.MIN_ITEM_CONF && b.conf >= CFG.MIN_ITEM_CONF) return true;
@@ -126,20 +179,33 @@ decideBtn.addEventListener("click", () => {
 });
 
 (async function boot(){
+  await hardResetIfRequested();
   startSplash5s();
 
+  // 画像manifest読み込み（絶対URL+v=BUILD）
   try{
-    IMAGES = await loadImageManifest(vurl(CFG.IMAGE_MANIFEST_URL));
-  }catch{
+    const manifestUrl = withBuild(absUrl(CFG.IMAGE_MANIFEST_URL));
+    IMAGES = await loadImageManifest(manifestUrl);
+
+    // 画像が0なら manifestの中身かファイル名が一致してない
+    const cIdle = IMAGES.idle.length;
+    const cAngry = IMAGES.angry.length;
+    const cNabana = IMAGES.nabana.length;
+    if (cIdle === 0 && cAngry === 0 && cNabana === 0){
+      setStatus(false, "画像0（img/manifest.json と実ファイル名が不一致）");
+    }
+  }catch(e){
     IMAGES = { idle:[], angry:[], nabana:[] };
+    setStatus(false, `画像manifest読込失敗（${String(e?.message || e)}）`);
   }
 
   showIdle();
 
+  // 暗号→復号
   try{
     await loadModelFromCipherDigits();
     setStatus(true, "モデルあり");
-  }catch{
-    setStatus(false, "モデル未読込（cipher.txt/設定確認）");
+  }catch(e){
+    setStatus(false, `モデル未読込（${String(e?.message || e)}）`);
   }
 })();
