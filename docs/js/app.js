@@ -17,6 +17,7 @@ const decideBtn = document.getElementById("decideBtn");
 
 let IMAGES = { idle:[], angry:[], nabana:[] };
 
+function vurl(u){ return `${u}?v=${encodeURIComponent(CFG.BUILD)}`; }
 function say(text){ bubble.textContent = text; }
 
 function setStatus(ok, msg){
@@ -36,7 +37,6 @@ function setNoImage(){
   );
 }
 
-/** listからランダム順に画像を試し、読めたやつを表示。全滅ならNO IMAGE */
 function setAvatarFromList(list){
   const tries = shuffled(list);
   if (!tries.length){ setNoImage(); return; }
@@ -45,26 +45,17 @@ function setAvatarFromList(list){
   avatarImg.onerror = () => {
     i += 1;
     if (i < tries.length) {
-      avatarImg.src = safeUrl(tries[i]);
+      avatarImg.src = safeUrl(vurl(tries[i]));
     } else {
       setNoImage();
     }
   };
-  avatarImg.src = safeUrl(tries[i]);
+  avatarImg.src = safeUrl(vurl(tries[i]));
 }
 
-function showIdle(){
-  setAvatarFromList(IMAGES.idle);
-  say(CFG.SAY_IDLE);
-}
-function showAngry(){
-  setAvatarFromList(IMAGES.angry);
-  say(CFG.SAY_ANGRY);
-}
-function showWin(winText){
-  setAvatarFromList(IMAGES.nabana);
-  say(CFG.sayWin(winText));
-}
+function showIdle(){ setAvatarFromList(IMAGES.idle); say(CFG.SAY_IDLE); }
+function showAngry(){ setAvatarFromList(IMAGES.angry); say(CFG.SAY_ANGRY); }
+function showWin(winText){ setAvatarFromList(IMAGES.nabana); say(CFG.sayWin(winText)); }
 
 function parseCipherDigits(s){
   const parts = (s || "").trim().split(".");
@@ -74,7 +65,7 @@ function parseCipherDigits(s){
 }
 
 async function fetchRemoteCipher(){
-  const res = await fetch(CFG.REMOTE_CIPHER_URL, { cache: "no-store" });
+  const res = await fetch(vurl(CFG.REMOTE_CIPHER_URL), { cache: "no-store" });
   if (!res.ok) throw new Error("remote_cipher_fetch_failed");
   const text = (await res.text()).trim();
   if (!text) throw new Error("remote_cipher_empty");
@@ -84,7 +75,6 @@ async function fetchRemoteCipher(){
 async function ensureCipherInLocal(){
   let digitsStr = getCipherDigits();
   if (digitsStr) return digitsStr;
-
   digitsStr = await fetchRemoteCipher();
   setCipherDigits(digitsStr);
   return digitsStr;
@@ -104,10 +94,7 @@ async function loadModelFromCipherDigits(){
 }
 
 function incomparable(a, b){
-  // 両方自信なし
   if (a.conf < CFG.MIN_ITEM_CONF && b.conf < CFG.MIN_ITEM_CONF) return true;
-
-  // ドメインが違いすぎる
   if (CFG.DOMAIN_STRICT){
     if (a.domain !== "other" && b.domain !== "other" && a.domain !== b.domain){
       if (a.conf >= CFG.MIN_ITEM_CONF && b.conf >= CFG.MIN_ITEM_CONF) return true;
@@ -141,17 +128,14 @@ decideBtn.addEventListener("click", () => {
 (async function boot(){
   startSplash5s();
 
-  // 画像manifest
   try{
-    IMAGES = await loadImageManifest(CFG.IMAGE_MANIFEST_URL);
+    IMAGES = await loadImageManifest(vurl(CFG.IMAGE_MANIFEST_URL));
   }catch{
     IMAGES = { idle:[], angry:[], nabana:[] };
   }
 
-  // まず待機
   showIdle();
 
-  // 暗号自動取得→復号→モデル保存
   try{
     await loadModelFromCipherDigits();
     setStatus(true, "モデルあり");
