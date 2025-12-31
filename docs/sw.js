@@ -1,4 +1,4 @@
-const CACHE_NAME = "nabanaroid-cache-v3"; // ←数字を上げるたびに強制更新
+const CACHE_NAME = "nabanaroid-cache-v4"; // ←数字を上げるたびに強制更新
 
 const CORE = [
   "./",
